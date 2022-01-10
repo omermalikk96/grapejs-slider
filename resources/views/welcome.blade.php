@@ -19,6 +19,7 @@
     <style>
         #gjs {
             border: 3px solid #444;
+            max-height: 100%;
         }
 
         /* Reset some default styling */
@@ -150,25 +151,41 @@
             });
 
         };
+
+
         const slider = editor => {
             editor.DomComponents.addType('slickslider', {
+                // extend: typeInput,
+                isComponent: el => el.tagName == 'SLIDER',
                 model: {
                     defaults: {
                         allowScripts: 1,
+                        classes: ['slickslider'],
                         ccid: '',
                         tagName: 'div',
+                        copyable: false,
                         draggable: true,
+                        droppable: true,
                         resizable: true,
-                        // components: [{
-                        //         type: 'image',
-                        //     },
-                        //     {
-                        //         type: 'image',
-                        //     }
-                        // ],
-                        script: function() {
-                        console.log('component');
+                        // traits: [{
+                        //     // name: 'image',
+                        //     type: 'image',
+                        //     name: 'image',
+                        //     changeProp: true,
+                        // }],
+                        
+                    
+                        components: [{
+                                type: 'image',
+                                // content:`<div  id="slickslider" data-gjs-type="slickslider"> <div class="slide" id="slide1"><img src="/images/home-banner.png">  </div><div class="slide" id="slide2"><img src="/images/nd.png">   </div></div>`
 
+                            },
+                            {
+                                type: 'image',
+                            }
+                        ],
+                        script: function() {
+                            console.log('inside component script')
                             const id = '{[ ccid ]}'
                             try {
                                 $('#' + id).slick('unslick');
@@ -186,6 +203,7 @@
                 },
                 view: {
                     init() {
+                        // console.log('here');
                         const ccid = this.model.ccid
                         this.model.set('ccid', ccid)
                         const viewObj = this
@@ -196,6 +214,8 @@
                                 onClick() {
                                     tImageView.prototype.onClick.apply(this);
                                     viewObj.updateScript()
+                                    alert('Image Selected Successfully!');
+
                                     this.em.get('Modal').close();
                                 },
                             }
@@ -204,6 +224,7 @@
                 }
             });
         };
+
 
 
         const editor = grapesjs.init({
@@ -289,10 +310,11 @@
             // avoidInlineStyle: false
         });
 
+
         editor.BlockManager.add('slickslider', {
             label: 'Slick Slider',
             category: 'Media',
-            // allowScripts: 1,
+            allowScripts: 1,
             attributes: {
                 icon: 'fa fa-video'
             },
@@ -306,15 +328,19 @@
                 script: function() {
 
                     var initMySLider = function() {
-                        console.log('editor');
-                        $('#slickslider').slick({
-                            dots: true,
-                            infinite: true,
-                            speed: 300,
-                            arrows: true,
-                            adaptiveHeight: true,
-                            slidesToScroll: 1,
-                        });
+                        // console.log('block manager script');
+                        const id = '{[ ccid ]}'
+                            try {
+                                $('#' + id).slick('unslick');
+                            } catch (e) {}
+                            $('#' + id).slick({
+                                dots: true,
+                                infinite: true,
+                                speed: 300,
+                                arrows: true,
+                                adaptiveHeight: true,
+                                slidesToScroll: 1,
+                            })
                     }
                     var script = document.createElement('script');
                     script.src = 'https://code.jquery.com/jquery-1.11.0.min.js';
@@ -343,25 +369,18 @@
                     document.body.appendChild(link2);
 
                 },
-              content: `<div  id="slickslider" data-gjs-type="slickslider"> <div class="slide" id="slide1"><img src="/images/home-banner.png">  </div><div class="slide" id="slide2"><img src="/images/nd.png">   </div></div>`
+                // content: `<div  id="slickslider" data-gjs-type="slickslider"> <div class="slide" id="slide1"><img src="/images/home-banner.png">  </div><div class="slide" id="slide2"><img src="/images/nd.png">   </div></div>`
             }
         });
+
+
+
+
 
         editor.TraitManager.addType('buttonCarousel', {
+            type: 'button',
 
-            events: {
-                'click': function() {
-                    editor.runCommand('open-assets', {
-                        target: editor.getSelected(),
-                        onClick: function onSelect(t) {
-                            //setting new slider contents
-                            editor.getSelected().view.updateScripts();
-                        }
-                    });
-                }
-            }
         });
-
 
 
 
