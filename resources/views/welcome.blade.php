@@ -173,19 +173,21 @@
                         //     name: 'image',
                         //     changeProp: true,
                         // }],
-                        
-                    
+
+
+
+
                         components: [{
                                 type: 'image',
-                                // content:`<div  id="slickslider" data-gjs-type="slickslider"> <div class="slide" id="slide1"><img src="/images/home-banner.png">  </div><div class="slide" id="slide2"><img src="/images/nd.png">   </div></div>`
-
                             },
                             {
                                 type: 'image',
                             }
+
                         ],
                         script: function() {
-                            console.log('inside component script')
+                            alert('model');
+                            console.log('inside model script')
                             const id = '{[ ccid ]}'
                             try {
                                 $('#' + id).slick('unslick');
@@ -203,7 +205,7 @@
                 },
                 view: {
                     init() {
-                        // console.log('here');
+                        alert('in view');
                         const ccid = this.model.ccid
                         this.model.set('ccid', ccid)
                         const viewObj = this
@@ -213,6 +215,7 @@
                             view: {
                                 onClick() {
                                     tImageView.prototype.onClick.apply(this);
+                                    // console.log(viewObj);
                                     viewObj.updateScript()
                                     alert('Image Selected Successfully!');
 
@@ -220,14 +223,19 @@
                                 },
                             }
                         })
-                    }
-                }
+                    },
+
+                },
+
+
             });
+
         };
 
 
 
         const editor = grapesjs.init({
+
 
             // Indicate where to init the editor. You can also pass an HTMLElement
             container: '#gjs',
@@ -310,7 +318,8 @@
             // avoidInlineStyle: false
         });
 
-
+        editor.on(`component:remove`, model => ('Global hook: component:remove', model.parent().view.render()));
+        // editor.on(`component:remove`, model => console.log('Global hook: component:remove', model.initMySLider()));
         editor.BlockManager.add('slickslider', {
             label: 'Slick Slider',
             category: 'Media',
@@ -326,21 +335,22 @@
                     'background-color': 'rgba(0, 0, 0, 0.1)',
                 },
                 script: function() {
-
+                    //   console.log('here scr');
                     var initMySLider = function() {
-                        // console.log('block manager script');
+                        alert('coming from delete');
+                        console.log('block manager script');
                         const id = '{[ ccid ]}'
-                            try {
-                                $('#' + id).slick('unslick');
-                            } catch (e) {}
-                            $('#' + id).slick({
-                                dots: true,
-                                infinite: true,
-                                speed: 300,
-                                arrows: true,
-                                adaptiveHeight: true,
-                                slidesToScroll: 1,
-                            })
+                        try {
+                            $('#' + id).slick('unslick');
+                        } catch (e) {}
+                        $('#' + id).slick({
+                            dots: true,
+                            infinite: true,
+                            speed: 300,
+                            arrows: true,
+                            adaptiveHeight: true,
+                            slidesToScroll: 1,
+                        })
                     }
                     var script = document.createElement('script');
                     script.src = 'https://code.jquery.com/jquery-1.11.0.min.js';
@@ -381,13 +391,6 @@
             type: 'button',
 
         });
-
-
-
-
-        // editor.addComponents(`<input name="my-test" title="hello"/>`)
-        // editor.addComponents(`<input name="my-test" title="hello"/>`)
-        // editor.BlockManager.add(customBlock.id, customBlock);
     </script>
 
 </body>
