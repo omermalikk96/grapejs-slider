@@ -188,6 +188,7 @@
                                 name: 'infinite',
                                 changeProp: 1,
                             },
+                            
                             {
                                 type: 'number',
                                 label: 'Slides to scroll',
