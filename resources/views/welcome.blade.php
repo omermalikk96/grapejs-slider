@@ -173,6 +173,28 @@
                         //     name: 'image',
                         //     changeProp: true,
                         // }],
+                        'speed': 50,
+                        'slides-to-scroll': 1,
+                        'infinite': false,
+                        traits: [{
+                                type: 'number',
+                                label: 'Slide Speed',
+                                name: 'speed',
+                                changeProp: 1,
+                            },
+                            {
+                                type: 'checkbox',
+                                label: 'Infinite',
+                                name: 'infinite',
+                                changeProp: 1,
+                            },
+                            {
+                                type: 'number',
+                                label: 'Slides to scroll',
+                                name: 'slides-to-scroll',
+                                changeProp: 1,
+                            },
+                        ],
 
 
 
@@ -187,6 +209,8 @@
                         ],
                         script: function() {
                             alert('model');
+                            var infinite = '{[ infinite ]}';
+                            infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
                             console.log('inside model script')
                             const id = '{[ ccid ]}'
                             try {
@@ -194,17 +218,22 @@
                             } catch (e) {}
                             $('#' + id).slick({
                                 dots: true,
-                                infinite: true,
-                                speed: 300,
+                                infinite: isNaN(infinite) ? false : infinite,
+                                speed: parseInt('{[ speed ]}', 10),
                                 arrows: true,
                                 adaptiveHeight: true,
-                                slidesToScroll: 1,
+                                slidesToScroll: parseInt('{[ slides-to-scroll ]}', 10),
                             })
                         }
                     },
                 },
                 view: {
                     init() {
+                        const props = ['speed', 'slides-to-scroll', 'infinite'];
+                        const reactTo = props.map(prop => `change:${prop}`).join(' ');
+                        this.listenTo(this.model, reactTo, this.render);
+                        const comps = this.model.components();
+
                         alert('in view');
                         const ccid = this.model.ccid
                         this.model.set('ccid', ccid)
@@ -336,6 +365,8 @@
                 },
                 script: function() {
                     //   console.log('here scr');
+                    var infinite = '{[ infinite ]}';
+                    infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
                     var initMySLider = function() {
                         alert('coming from delete');
                         console.log('block manager script');
@@ -345,11 +376,11 @@
                         } catch (e) {}
                         $('#' + id).slick({
                             dots: true,
-                            infinite: true,
-                            speed: 300,
+                            infinite: isNaN(infinite) ? false : infinite,
+                            speed: parseInt('{[ speed ]}', 10),
                             arrows: true,
                             adaptiveHeight: true,
-                            slidesToScroll: 1,
+                            slidesToScroll: parseInt('{[ slides-to-scroll ]}', 10),
                         })
                     }
                     var script = document.createElement('script');
