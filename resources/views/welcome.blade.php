@@ -152,67 +152,277 @@
 
         };
 
-
-        const slider = editor => {
-            editor.DomComponents.addType('slickslider', {
-                // extend: typeInput,
-                isComponent: el => el.tagName == 'SLIDER',
+        const imageBox = editor => {
+            editor.DomComponents.addType('image-block', {
+                extend: 'default',
                 model: {
-                    defaults: {
-                        allowScripts: 1,
-                        classes: ['slickslider'],
-                        ccid: '',
-                        tagName: 'div',
-                        copyable: false,
-                        draggable: true,
-                        droppable: true,
-                        resizable: true,
-                        // traits: [{
-                        //     // name: 'image',
-                        //     type: 'image',
-                        //     name: 'image',
-                        //     changeProp: true,
-                        // }],
-                        'speed': 50,
-                        'slides-to-scroll': 1,
-                        'infinite': false,
-                        traits: [{
-                                type: 'number',
-                                label: 'Slide Speed',
-                                name: 'speed',
-                                changeProp: 1,
-                            },
-                            {
-                                type: 'checkbox',
-                                label: 'Infinite',
-                                name: 'infinite',
-                                changeProp: 1,
-                            },
-                            
-                            {
-                                type: 'number',
-                                label: 'Slides to scroll',
-                                name: 'slides-to-scroll',
-                                changeProp: 1,
-                            },
-                        ],
+                    defaults: function() {
+                        return {
+                            name: 'Background image',
+                            type: 'image-block',
+                            tagName: 'div',
+                            void: false,
+                            droppable: true,
+                            resizable: true,
+                        }
+                    }
+                },
+                view: {
+                    init() {
+                        this.listenTo(this.model, 'active', this.onActive)
+                        this.listenTo(this.model, 'change:src', this.updateImage)
+                    },
+                    events: {
+                        dblclick: 'onActive'
+                    },
+                    onActive() {
+                        editor.runCommand('open-assets', {
+                            target: this.model,
+                            types: ['image'],
+                            accept: 'image/*'
+                        })
+                    },
+                    updateImage(model, url) {
+                        if (url) {
+                            const style = model.getStyle()
+
+                            model.setStyle({
+                                'background-image': style['background-color'] || `url("${url}")`,
+                                'background-size': style['background-size'] || 'cover',
+                                'background-position': style['background-position'] || 'center center',
+                                'background-repeat': style['background-repeat'] || 'no-repeat',
+                                'min-height': style['min-height'] || '200px'
+                            })
+                            console.log(model);
+                        }
+                    }
+                }
+            })
+        };
+
+
+
+            const slider = editor => {
+                editor.DomComponents.addType('slickslider', {
+                    // extend: typeInput,
+                    isComponent: el => el.tagName == 'SLIDER',
+                    model: {
+                        defaults: {
+                            allowScripts: 1,
+                            classes: ['slickslider'],
+                            ccid: '',
+                            tagName: 'div',
+                            copyable: false,
+                            draggable: true,
+                            droppable: true,
+                            resizable: true,
+                            // traits: [{
+                            //     // name: 'image',
+                            //     type: 'image',
+                            //     name: 'image',
+                            //     changeProp: true,
+                            // }],
+                            'speed': 50,
+                            'slides-to-scroll': 1,
+                            'infinite': false,
+                            traits: [{
+                                    type: 'number',
+                                    label: 'Slide Speed',
+                                    name: 'speed',
+                                    changeProp: 1,
+                                },
+                                {
+                                    type: 'checkbox',
+                                    label: 'Infinite',
+                                    name: 'infinite',
+                                    changeProp: 1,
+                                },
+
+                                {
+                                    type: 'number',
+                                    label: 'Slides to scroll',
+                                    name: 'slides-to-scroll',
+                                    changeProp: 1,
+                                },
+                            ],
 
 
 
 
-                        components: [{
-                                type: 'image',
-                            },
-                            {
-                                type: 'image',
+                            components: [{
+                                    type: 'default',
+                                    name: 'slide'
+                                },
+                                {
+                                    type: 'default',
+                                    name: 'slide'
+                                },
+                            ],
+                            script: function() {
+                                alert('model');
+                                var infinite = '{[ infinite ]}';
+                                infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
+                                console.log('inside model script')
+                                const id = '{[ ccid ]}'
+                                try {
+                                    $('#' + id).slick('unslick');
+                                } catch (e) {}
+                                $('#' + id).slick({
+                                    dots: true,
+                                    infinite: isNaN(infinite) ? false : infinite,
+                                    speed: parseInt('{[ speed ]}', 10),
+                                    arrows: true,
+                                    adaptiveHeight: true,
+                                    slidesToScroll: parseInt('{[ slides-to-scroll ]}', 10),
+                                })
                             }
+                        },
+                    },
+                    view: {
+                        init() {
+                            const props = ['speed', 'slides-to-scroll', 'infinite'];
+                            const reactTo = props.map(prop => `change:${prop}`).join(' ');
+                            this.listenTo(this.model, reactTo, this.render);
+                            const comps = this.model.components();
 
-                        ],
-                        script: function() {
-                            alert('model');
-                            var infinite = '{[ infinite ]}';
-                            infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
-                            console.log('inside model script')
+                            alert('in view');
+                            const ccid = this.model.ccid
+                            this.model.set('ccid', ccid)
+                            const viewObj = this
+                            viewObj.updateScript()
+
+                            // const am = editor.AssetManager;
+                            // const tImageView = am.getType('image').view;
+                            // am.addType('image', {
+                            //     view: {
+                            //         onClick() {
+                            //             tImageView.prototype.onClick.apply(this);
+                            //             // console.log(viewObj);
+                            //             alert('Image Selected Successfully!');
+
+                            //             this.em.get('Modal').close();
+                            //         },
+                            //     }
+                            // })
+
+                        },
+
+                    },
+
+
+                });
+
+            };
+
+
+
+            const editor = grapesjs.init({
+
+
+                // Indicate where to init the editor. You can also pass an HTMLElement
+                container: '#gjs',
+                allowScripts: 1,
+                // Get the content for the canvas directly from the element
+                // As an alternative we could use: `components: '<h1>Hello World Component!</h1>'`,
+                fromElement: true,
+                // Size of the editor
+                height: '300px',
+                width: 'auto',
+                // Disable the storage manager for the moment
+                storageManager: false,
+                // Avoid any default panel
+                // panels: { defaults: [] },
+                // scripts: [
+                //     'https://code.jquery.com/jquery-1.11.0.min.js',
+                //     'https://code.jquery.com/jquery-migrate-1.2.1.min.js'
+                // ],
+                blockManager: {
+                    appendTo: '#blocks',
+                    blocks: [{
+                            id: 'section', // id is mandatory
+                            label: '<b>Section</b>', // You can use HTML/SVG inside labels
+                            attributes: {
+                                class: 'gjs-block-section'
+                            },
+                            content: `<section>
+                            <h1>This is a simple title</h1>
+                            <div>This is just a Lorem text: Lorem ipsum dolor sit amet</div>
+                            </section>`,
+                        }, {
+                            id: 'text',
+                            label: 'Text',
+                            content: '<div data-gjs-type="text">Insert your text here</div>',
+                        }, {
+                            id: 'image',
+                            label: 'Image',
+                            // Select the component once it's dropped
+                            select: true,
+                            // You can pass components as a JSON instead of a simple HTML string,
+                            // in this case we also use a defined component type `image`
+                            content: {
+                                type: 'image'
+                            },
+                            // This triggers `active` event on dropped components and the `image`
+                            // reacts by opening the AssetManager
+                            activate: true,
+                        },
+                        {
+                            id: 'button',
+                            label: 'button',
+                            // Select the component once it's dropped
+                            select: true,
+                            // You can pass components as a JSON instead of a simple HTML string,
+                            // in this case we also use a defined component type `image`
+                            content: {
+                                type: 'typeButton'
+                            },
+                            // This triggers `active` event on dropped components and the `image`
+                            // reacts by opening the AssetManager
+                            activate: true,
+                        },
+                        {
+                            id: 'slide',
+                            label: 'slide',
+                            // Select the component once it's dropped
+                            select: true,
+                            // You can pass components as a JSON instead of a simple HTML string,
+                            // in this case we also use a defined component type `image`
+                            content: {
+                                type: 'box'
+                            },
+                            // This triggers `active` event on dropped components and the `image`
+                            // reacts by opening the AssetManager
+                            activate: true,
+                        },
+                    ]
+                },
+                plugins: [myNewComponentTypes, slider, imageBox],
+                // avoidInlineStyle: false
+            });
+
+            editor.on(`component:remove`, model => ('Global hook: component:remove', model.parent().view.render()));
+            // editor.on(`component:remove`, model => console.log('Global hook: component:remove', model.initMySLider()));
+            editor.BlockManager.add('slickslider', {
+                label: 'Slick Slider',
+                category: 'Media',
+                allowScripts: 1,
+                attributes: {
+                    icon: 'fa fa-video'
+                },
+                content: {
+
+                    type: 'slickslider',
+                    activeOnRender: 1,
+                    style: {
+                        'background-color': 'rgba(0, 0, 0, 0.1)',
+                    },
+                    script: function() {
+                        //   console.log('here scr');
+                        var infinite = '{[ infinite ]}';
+                        infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
+                        var initMySLider = function() {
+                            alert('coming from delete');
+                            console.log('block manager script');
                             const id = '{[ ccid ]}'
                             try {
                                 $('#' + id).slick('unslick');
@@ -226,203 +436,56 @@
                                 slidesToScroll: parseInt('{[ slides-to-scroll ]}', 10),
                             })
                         }
+                        var script = document.createElement('script');
+                        script.src = 'https://code.jquery.com/jquery-1.11.0.min.js';
+                        document.body.appendChild(script);
+
+                        var script = document.createElement('script');
+                        script.src = 'https://code.jquery.com/jquery-migrate-1.2.1.min.js';
+                        document.body.appendChild(script);
+
+                        var script = document.createElement('script');
+                        script.onload = initMySLider;
+                        script.src = '/js/slick.min.js';
+                        document.body.appendChild(script);
+
+
+                        var link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.type = 'text/css';
+                        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css';
+
+                        var link2 = document.createElement('link');
+                        link2.rel = 'stylesheet';
+                        link2.type = 'text/css';
+                        link2.href =
+                            'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css';
+                        document.body.appendChild(link);
+                        document.body.appendChild(link2);
+
                     },
-                },
-                view: {
-                    init() {
-                        const props = ['speed', 'slides-to-scroll', 'infinite'];
-                        const reactTo = props.map(prop => `change:${prop}`).join(' ');
-                        this.listenTo(this.model, reactTo, this.render);
-                        const comps = this.model.components();
-
-                        alert('in view');
-                        const ccid = this.model.ccid
-                        this.model.set('ccid', ccid)
-                        const viewObj = this
-                        const am = editor.AssetManager;
-                        const tImageView = am.getType('image').view;
-                        am.addType('image', {
-                            view: {
-                                onClick() {
-                                    tImageView.prototype.onClick.apply(this);
-                                    // console.log(viewObj);
-                                    viewObj.updateScript()
-                                    alert('Image Selected Successfully!');
-
-                                    this.em.get('Modal').close();
-                                },
-                            }
-                        })
-                    },
-
-                },
-
-
+                    //  content: `<div class="slide" id="slide1">sfdfs </div>`
+                }
             });
 
-        };
 
+            const bm = editor.BlockManager
 
-
-        const editor = grapesjs.init({
-
-
-            // Indicate where to init the editor. You can also pass an HTMLElement
-            container: '#gjs',
-            allowScripts: 1,
-            // Get the content for the canvas directly from the element
-            // As an alternative we could use: `components: '<h1>Hello World Component!</h1>'`,
-            fromElement: true,
-            // Size of the editor
-            height: '300px',
-            width: 'auto',
-            // Disable the storage manager for the moment
-            storageManager: false,
-            // Avoid any default panel
-            // panels: { defaults: [] },
-            // scripts: [
-            //     'https://code.jquery.com/jquery-1.11.0.min.js',
-            //     'https://code.jquery.com/jquery-migrate-1.2.1.min.js'
-            // ],
-            blockManager: {
-                appendTo: '#blocks',
-                blocks: [{
-                        id: 'section', // id is mandatory
-                        label: '<b>Section</b>', // You can use HTML/SVG inside labels
-                        attributes: {
-                            class: 'gjs-block-section'
-                        },
-                        content: `<section>
-                            <h1>This is a simple title</h1>
-                            <div>This is just a Lorem text: Lorem ipsum dolor sit amet</div>
-                            </section>`,
-                    }, {
-                        id: 'text',
-                        label: 'Text',
-                        content: '<div data-gjs-type="text">Insert your text here</div>',
-                    }, {
-                        id: 'image',
-                        label: 'Image',
-                        // Select the component once it's dropped
-                        select: true,
-                        // You can pass components as a JSON instead of a simple HTML string,
-                        // in this case we also use a defined component type `image`
-                        content: {
-                            type: 'image'
-                        },
-                        // This triggers `active` event on dropped components and the `image`
-                        // reacts by opening the AssetManager
-                        activate: true,
-                    },
-                    {
-                        id: 'button',
-                        label: 'button',
-                        // Select the component once it's dropped
-                        select: true,
-                        // You can pass components as a JSON instead of a simple HTML string,
-                        // in this case we also use a defined component type `image`
-                        content: {
-                            type: 'typeButton'
-                        },
-                        // This triggers `active` event on dropped components and the `image`
-                        // reacts by opening the AssetManager
-                        activate: true,
-                    },
-                    {
-                        id: 'href',
-                        label: 'href',
-                        // Select the component once it's dropped
-                        select: true,
-                        // You can pass components as a JSON instead of a simple HTML string,
-                        // in this case we also use a defined component type `image`
-                        content: {
-                            type: 'link'
-                        },
-                        // This triggers `active` event on dropped components and the `image`
-                        // reacts by opening the AssetManager
-                        activate: true,
-                    },
-                ]
-            },
-            plugins: [myNewComponentTypes, slider],
-            // avoidInlineStyle: false
-        });
-
-        editor.on(`component:remove`, model => ('Global hook: component:remove', model.parent().view.render()));
-        // editor.on(`component:remove`, model => console.log('Global hook: component:remove', model.initMySLider()));
-        editor.BlockManager.add('slickslider', {
-            label: 'Slick Slider',
-            category: 'Media',
-            allowScripts: 1,
-            attributes: {
-                icon: 'fa fa-video'
-            },
-            content: {
-
-                type: 'slickslider',
-                activeOnRender: 1,
-                style: {
-                    'background-color': 'rgba(0, 0, 0, 0.1)',
-                },
-                script: function() {
-                    //   console.log('here scr');
-                    var infinite = '{[ infinite ]}';
-                    infinite = infinite == 'true' ? 1 : parseInt(infinite, 10);
-                    var initMySLider = function() {
-                        alert('coming from delete');
-                        console.log('block manager script');
-                        const id = '{[ ccid ]}'
-                        try {
-                            $('#' + id).slick('unslick');
-                        } catch (e) {}
-                        $('#' + id).slick({
-                            dots: true,
-                            infinite: isNaN(infinite) ? false : infinite,
-                            speed: parseInt('{[ speed ]}', 10),
-                            arrows: true,
-                            adaptiveHeight: true,
-                            slidesToScroll: parseInt('{[ slides-to-scroll ]}', 10),
-                        })
+            bm.add('image-block', {
+                label: 'Background Image',
+                category: 'Basic',
+                content: {
+                    type: 'image-block',
+                    activeOnRender: true,
+                    style: {
+                        'background-image': `url('${window.origin}/images/sample.jpg')`,
+                        'min-height': '200px',
+                        'background-size': 'cover',
+                        'background-position': 'center center',
+                        'background-repeat': 'no-repeat'
                     }
-                    var script = document.createElement('script');
-                    script.src = 'https://code.jquery.com/jquery-1.11.0.min.js';
-                    document.body.appendChild(script);
-
-                    var script = document.createElement('script');
-                    script.src = 'https://code.jquery.com/jquery-migrate-1.2.1.min.js';
-                    document.body.appendChild(script);
-
-                    var script = document.createElement('script');
-                    script.onload = initMySLider;
-                    script.src = '/js/slick.min.js';
-                    document.body.appendChild(script);
-
-
-                    var link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.type = 'text/css';
-                    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css';
-
-                    var link2 = document.createElement('link');
-                    link2.rel = 'stylesheet';
-                    link2.type = 'text/css';
-                    link2.href = 'https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css';
-                    document.body.appendChild(link);
-                    document.body.appendChild(link2);
-
-                },
-                // content: `<div  id="slickslider" data-gjs-type="slickslider"> <div class="slide" id="slide1"><img src="/images/home-banner.png">  </div><div class="slide" id="slide2"><img src="/images/nd.png">   </div></div>`
-            }
-        });
-
-
-
-
-
-        editor.TraitManager.addType('buttonCarousel', {
-            type: 'button',
-
-        });
+                }
+            });
     </script>
 
 </body>
